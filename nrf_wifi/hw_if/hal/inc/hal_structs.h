@@ -18,8 +18,8 @@
 #include "osal_api.h"
 #include "bal_api.h"
 
- /** 1 sec */
-#define MAX_HAL_RPU_READY_WAIT (1 * 1000 * 1000)
+ /** 5 sec */ /** Increase the time to adjust fpga delays */
+#define MAX_HAL_RPU_READY_WAIT (5 * 1000 * 1000)
 
 #if defined(CONFIG_NRF_WIFI_LOW_POWER) || defined(__DOXYGEN__)
 #define RPU_PS_WAKE_INTERVAL_MS 1
