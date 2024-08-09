@@ -51,12 +51,26 @@ enum nrf_wifi_status pal_rpu_addr_offset_get(unsigned int rpu_addr,
 		region_offset = SOC_MMAP_ADDR_OFFSET_PKTRAM_HOST_VIEW;
 	} else if (pal_check_rpu_mcu_regions(proc, rpu_addr)) {
 		region_offset = SOC_MMAP_ADDR_OFFSETS_MCU[proc];
+#ifdef CONFIG_NRF_WIFI_SOC_VEGA
+	} else if ((rpu_addr >= RPU_ADDR_GDRAM_START) &&
+		   (rpu_addr <= RPU_ADDR_GDRAM_END)) {
+		region_offset = SOC_MMAP_ADDR_OFFSET_GDRAM_PKD;
+	} else if (addr_base == RPU_ADDR_BELLBOARD_REGION) {
+                region_offset = SOC_MMAP_ADDR_OFFSET_BELLBOARD;
+#endif
 	} else {
 		nrf_wifi_osal_log_err("%s: Invalid rpu_addr 0x%X",
 				      __func__,
 				      rpu_addr);
 		goto out;
 	}
+#ifdef CONFIG_NRF_WIFI_SOC_VEGA
+        if (addr_base == RPU_ADDR_BELLBOARD_REGION) {
+             *addr = region_offset + (rpu_addr & RPU_BELLBOARD_ADDR_MASK_OFFSET);
+	} else if (addr_base == RPU_ADDR_PKTRAM_START) {
+             *addr = region_offset + (rpu_addr & 0x0000FFFF);
+	}  else
+#endif
 
 	*addr = region_offset + (rpu_addr & RPU_ADDR_MASK_OFFSET);
 

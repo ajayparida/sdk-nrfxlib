@@ -21,6 +21,12 @@ enum nrf_wifi_status hal_rpu_irq_enable(struct nrf_wifi_hal_dev_ctx *hal_dev_ctx
 	enum nrf_wifi_status status = NRF_WIFI_STATUS_FAIL;
 	unsigned int val = 0;
 
+#ifdef CONFIG_NRF_WIFI_SOC_VEGA
+	val = 1;
+	status = hal_rpu_reg_write(hal_dev_ctx,
+                                   VEGA_RPU_REG_INT_FROM_MCU_CTRL,
+                                   val);
+#else
 	/* First enable the blockwise interrupt for the relevant block in the
 	 * master register
 	 */
@@ -52,6 +58,7 @@ enum nrf_wifi_status hal_rpu_irq_enable(struct nrf_wifi_hal_dev_ctx *hal_dev_ctx
 	status = hal_rpu_reg_write(hal_dev_ctx,
 				   RPU_REG_INT_FROM_MCU_CTRL,
 				   val);
+#endif
 
 	if (status != NRF_WIFI_STATUS_SUCCESS) {
 		nrf_wifi_osal_log_err("%s:Enabling MCU interrupt failed",
@@ -69,6 +76,12 @@ enum nrf_wifi_status hal_rpu_irq_disable(struct nrf_wifi_hal_dev_ctx *hal_dev_ct
 	enum nrf_wifi_status status = NRF_WIFI_STATUS_FAIL;
 	unsigned int val = 0;
 
+#ifdef CONFIG_NRF_WIFI_SOC_VEGA
+	val = 0;
+        status = hal_rpu_reg_write(hal_dev_ctx,
+                                   VEGA_RPU_REG_INT_FROM_MCU_CTRL,
+                                   0);
+#else
 	status = hal_rpu_reg_read(hal_dev_ctx,
 				  &val,
 				  RPU_REG_INT_FROM_RPU_CTRL);
@@ -96,6 +109,7 @@ enum nrf_wifi_status hal_rpu_irq_disable(struct nrf_wifi_hal_dev_ctx *hal_dev_ct
 	status = hal_rpu_reg_write(hal_dev_ctx,
 				   RPU_REG_INT_FROM_MCU_CTRL,
 				   val);
+#endif
 
 	if (status != NRF_WIFI_STATUS_SUCCESS) {
 		nrf_wifi_osal_log_err("%s: Disabling MCU interrupt failed",
@@ -113,16 +127,23 @@ static enum nrf_wifi_status hal_rpu_irq_ack(struct nrf_wifi_hal_dev_ctx *hal_dev
 	enum nrf_wifi_status status = NRF_WIFI_STATUS_FAIL;
 	unsigned int val = 0;
 
+#ifdef CONFIG_NRF_WIFI_SOC_VEGA
+        status = hal_rpu_reg_write(hal_dev_ctx,
+                                   VEGA_RPU_REG_INT_FROM_MCU_CLR,
+                                   val);
+#else
 	val = (1 << RPU_REG_BIT_INT_FROM_MCU_ACK);
 
 	status = hal_rpu_reg_write(hal_dev_ctx,
 				   RPU_REG_INT_FROM_MCU_ACK,
 				   val);
+#endif
 
 	return status;
 }
 
 
+#ifndef CONFIG_NRF_WIFI_SOC_VEGA
 static bool hal_rpu_irq_wdog_chk(struct nrf_wifi_hal_dev_ctx *hal_dev_ctx)
 {
 	enum nrf_wifi_status status = NRF_WIFI_STATUS_FAIL;
@@ -146,7 +167,6 @@ out:
 	return ret;
 
 }
-
 
 static enum nrf_wifi_status hal_rpu_irq_wdog_ack(struct nrf_wifi_hal_dev_ctx *hal_dev_ctx)
 {
@@ -183,7 +203,7 @@ static enum nrf_wifi_status hal_rpu_irq_wdog_rearm(struct nrf_wifi_hal_dev_ctx *
 out:
 	return status;
 }
-
+#endif
 
 static enum nrf_wifi_status hal_rpu_event_free(struct nrf_wifi_hal_dev_ctx *hal_dev_ctx,
 					       unsigned int event_addr)
@@ -459,6 +479,7 @@ out:
 	return num_events;
 }
 
+#ifndef CONFIG_NRF_WIFI_SOC_VEGA
 static enum nrf_wifi_status hal_rpu_process_wdog(struct nrf_wifi_hal_dev_ctx *hal_dev_ctx,
 						  bool *do_rpu_recovery)
 {
@@ -499,6 +520,7 @@ out:
 
 	return nrf_wifi_status;
 }
+#endif
 
 enum nrf_wifi_status hal_rpu_irq_process(struct nrf_wifi_hal_dev_ctx *hal_dev_ctx,
 		bool *do_rpu_recovery)
@@ -520,6 +542,8 @@ enum nrf_wifi_status hal_rpu_irq_process(struct nrf_wifi_hal_dev_ctx *hal_dev_ct
 	 */
 	num_events = hal_rpu_event_get_all(hal_dev_ctx);
 
+//Watch dog is not supported in Vega
+#ifndef CONFIG_NRF_WIFI_SOC_VEGA
 	if (hal_rpu_irq_wdog_chk(hal_dev_ctx)) {
 		nrf_wifi_osal_log_dbg("Received watchdog interrupt");
 
@@ -537,7 +561,7 @@ enum nrf_wifi_status hal_rpu_irq_process(struct nrf_wifi_hal_dev_ctx *hal_dev_ct
 			goto out;
 		}
 	}
-
+#endif
 	status = hal_rpu_irq_ack(hal_dev_ctx);
 
 	if (status == NRF_WIFI_STATUS_FAIL) {

@@ -538,9 +538,15 @@ static enum nrf_wifi_status hal_rpu_msg_trigger(struct nrf_wifi_hal_dev_ctx *hal
 {
 	enum nrf_wifi_status status = NRF_WIFI_STATUS_FAIL;
 
+#ifdef CONFIG_NRF_WIFI_SOC_VEGA
+        status = hal_rpu_reg_write(hal_dev_ctx,
+                                   VEGA_RPU_REG_INT_TO_WIFICORE_BELLBOARD_TASKS_TRIGGER,
+                                   1);
+#else
 	status = hal_rpu_reg_write(hal_dev_ctx,
 				   RPU_REG_INT_TO_MCU_CTRL,
 				   (hal_dev_ctx->num_cmds | 0x7fff0000));
+#endif
 
 	if (status != NRF_WIFI_STATUS_SUCCESS) {
 		nrf_wifi_osal_log_err("%s: Writing to MCU cmd register failed",
@@ -871,11 +877,13 @@ enum nrf_wifi_status nrf_wifi_hal_data_cmd_send(struct nrf_wifi_hal_dev_ctx *hal
 	addr = addr_base + (max_cmd_size * desc_id);
 	host_addr = addr;
 
+#ifndef CONFIG_NRF_WIFI_SOC_VEGA
 	/* This is a indrect write to core memory */
 	if (cmd_type == NRF_WIFI_HAL_MSG_TYPE_CMD_DATA_RX) {
 		host_addr &= RPU_ADDR_MASK_OFFSET;
 		host_addr |= RPU_MCU_CORE_INDIRECT_BASE;
 	}
+#endif
 
 	/* Copy the information to the suggested address */
 	status = hal_rpu_mem_write(hal_dev_ctx,
@@ -1543,6 +1551,7 @@ enum nrf_wifi_status nrf_wifi_hal_fw_chk_boot(struct nrf_wifi_hal_dev_ctx *hal_d
 	unsigned int exp_val = 0;
 	unsigned int mcu_ready_wait_count = MCU_FW_BOOT_TIMEOUT_MS / 10;
 
+
 	if (rpu_proc == RPU_PROC_TYPE_MCU_LMAC) {
 		addr = RPU_MEM_LMAC_BOOT_SIG;
 		exp_val = NRF_WIFI_LMAC_BOOT_SIG;
@@ -1557,7 +1566,9 @@ enum nrf_wifi_status nrf_wifi_hal_fw_chk_boot(struct nrf_wifi_hal_dev_ctx *hal_d
 
 	hal_dev_ctx->curr_proc = rpu_proc;
 
-	while (mcu_ready_wait_count-- > 0) {
+	/* Post decrement never reaches zero for mcu_ready_wait_count */
+
+	while (--mcu_ready_wait_count > 0) {
 		status = hal_rpu_mem_read(hal_dev_ctx,
 					  (unsigned char *)&val,
 					  addr,
@@ -1568,7 +1579,6 @@ enum nrf_wifi_status nrf_wifi_hal_fw_chk_boot(struct nrf_wifi_hal_dev_ctx *hal_d
 					      __func__,
 					      rpu_proc);
 		}
-
 		if (val == exp_val) {
 			break;
 		}

@@ -18,8 +18,13 @@
 #include "phy_rf_params.h"
 #include "pack_def.h"
 
+#ifdef CONFIG_NRF_WIFI_SOC_VEGA
+#define RPU_MEM_LMAC_BOOT_SIG 0x28000000
+#define RPU_MEM_LMAC_VER 0x28000004
+#else
 #define RPU_MEM_LMAC_BOOT_SIG 0xB7000D50
 #define RPU_MEM_LMAC_VER 0xB7000D54
+#endif
 
 #define RPU_MEM_LMAC_PATCH_BIN 0x80044000
 #define RPU_MEM_LMAC_PATCH_BIMG 0x8004B400

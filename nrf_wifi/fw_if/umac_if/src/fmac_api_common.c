@@ -235,6 +235,7 @@ enum nrf_wifi_status nrf_wifi_fmac_fw_boot(struct nrf_wifi_fmac_dev_ctx *fmac_de
 	int i = 0;
 
 	for (i = 0; i < ARRAY_SIZE(wifi_proc); i++) {
+#if 0
 		status = nrf_wifi_hal_fw_patch_boot(fmac_dev_ctx->hal_dev_ctx,
 						    wifi_proc[i].type,
 						    wifi_proc[i].is_patch_present);
@@ -244,7 +245,7 @@ enum nrf_wifi_status nrf_wifi_fmac_fw_boot(struct nrf_wifi_fmac_dev_ctx *fmac_de
 					      __func__, wifi_proc[i].name);
 			return NRF_WIFI_STATUS_FAIL;
 		}
-
+#endif
 		status = nrf_wifi_hal_fw_chk_boot(fmac_dev_ctx->hal_dev_ctx,
 						  wifi_proc[i].type);
 
@@ -629,6 +630,7 @@ enum nrf_wifi_status nrf_wifi_fmac_rf_params_get(
 		status = NRF_WIFI_STATUS_FAIL;
 		goto out;
 	}
+
 	if (!(otp_info.flags & (~CALIB_XO_FLAG_MASK))) {
 		nrf_wifi_osal_mem_cpy(&phy_rf_params->xo_offset.xo_freq_offset,
 				      (char *)otp_info.info.calib + OTP_OFF_CALIB_XO,

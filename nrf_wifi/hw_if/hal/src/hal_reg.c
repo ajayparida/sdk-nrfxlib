@@ -19,7 +19,12 @@ static bool hal_rpu_is_reg(unsigned int addr_val)
 	unsigned int addr_base = (addr_val & RPU_ADDR_MASK_BASE);
 
 	if ((addr_base == RPU_ADDR_SBUS_START) ||
-	    (addr_base == RPU_ADDR_PBUS_START)) {
+	    (addr_base == RPU_ADDR_PBUS_START)
+#ifdef CONFIG_NRF_WIFI_SOC_VEGA
+                ||
+                (addr_base == RPU_ADDR_BELLBOARD_REGION)
+#endif
+	    ) {
 		return true;
 	} else {
 		return false;

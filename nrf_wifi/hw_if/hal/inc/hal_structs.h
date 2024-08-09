@@ -18,7 +18,7 @@
 #include "osal_api.h"
 #include "bal_api.h"
 
- /** 1 sec */
+/** 1 sec */ /** Increase the time to adjust fpga delays */
 #define MAX_HAL_RPU_READY_WAIT (1 * 1000 * 1000)
 
 #if defined(CONFIG_NRF_WIFI_LOW_POWER) || defined(__DOXYGEN__)
